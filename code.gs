@@ -1,7 +1,8 @@
 // Konfigurasi Global
 const SHEET_NAME = "Database_Utama";
+const USERS_SHEET_NAME = "Users";
 
-// Definisi Struktur Kolom Database (0-indexed)
+// Definisi Struktur Kolom Database Surat (0-indexed)
 const COLUMNS = {
   ID: 0,
   NOMOR_SURAT: 1,
@@ -17,11 +18,16 @@ const COLUMNS = {
   UPDATED_AT: 11
 };
 
-// Header Kolom untuk inisialisasi otomatis
+// Header Kolom Surat untuk inisialisasi otomatis
 const HEADER_LIST = [
   "ID", "Nomor_Surat", "Tanggal_Surat", "Pengirim", "Penerima", 
   "Perihal", "Kategori", "Status", "Lampiran_URL", "Catatan", 
   "Created_At", "Updated_At"
+];
+
+// Header Kolom Users
+const USERS_HEADER_LIST = [
+  "Username", "Password", "FullName", "Role"
 ];
 
 /**
@@ -43,7 +49,6 @@ function doGet() {
 /**
  * Fungsi koneksi ke Spreadsheet.
  * Mengambil sheet Database_Utama atau membuatnya otomatis jika belum ada.
- * Jika sheet baru dibuat/kosong, otomatis menyuntikkan data sampel (Seeder).
  */
 function getDatabaseSheet() {
   try {
@@ -51,7 +56,6 @@ function getDatabaseSheet() {
     const properties = PropertiesService.getScriptProperties();
     const customId = properties.getProperty("CUSTOM_SPREADSHEET_ID");
     
-    // Gunakan Spreadsheet kustom jika dikonfigurasi, jika tidak gunakan yang aktif tempat script berada
     if (customId && customId.trim() !== "") {
       ss = SpreadsheetApp.openById(customId.trim());
     } else {
@@ -60,17 +64,15 @@ function getDatabaseSheet() {
     
     let sheet = ss.getSheetByName(SHEET_NAME);
     
-    // Buat otomatis sheet jika belum ada
     if (!sheet) {
       sheet = ss.insertSheet(SHEET_NAME);
       sheet.appendRow(HEADER_LIST);
       sheet.getRange(1, 1, 1, HEADER_LIST.length)
            .setFontWeight("bold")
-           .setBackground("#1e3a8a") // Brand Dark Blue
+           .setBackground("#1e3a8a") 
            .setFontColor("#ffffff");
     }
     
-    // Auto-Seed Data Sampel jika sheet masih kosong (hanya ada baris header)
     if (sheet.getLastRow() === 1) {
       seedSampleData(sheet);
     }
@@ -82,8 +84,79 @@ function getDatabaseSheet() {
 }
 
 /**
- * Menyuntikkan data sampel dinas/kantor agar aplikasi langsung terisi saat pertama dideploy.
+ * Mendapatkan sheet Users atau membuatnya jika belum ada.
  */
+function getUsersSheet() {
+  try {
+    let ss;
+    const properties = PropertiesService.getScriptProperties();
+    const customId = properties.getProperty("CUSTOM_SPREADSHEET_ID");
+    
+    if (customId && customId.trim() !== "") {
+      ss = SpreadsheetApp.openById(customId.trim());
+    } else {
+      ss = SpreadsheetApp.getActiveSpreadsheet();
+    }
+    
+    let sheet = ss.getSheetByName(USERS_SHEET_NAME);
+    
+    if (!sheet) {
+      sheet = ss.insertSheet(USERS_SHEET_NAME);
+      sheet.appendRow(USERS_HEADER_LIST);
+      sheet.getRange(1, 1, 1, USERS_HEADER_LIST.length)
+           .setFontWeight("bold")
+           .setBackground("#1e3a8a") 
+           .setFontColor("#ffffff");
+      
+      // Seed Akun Default (Admin & User)
+      sheet.appendRow(["admin", "admin123", "Administrator Utama", "Admin"]);
+      sheet.appendRow(["user", "user123", "Staff Pengarsipan", "User"]);
+    }
+    
+    return sheet;
+  } catch (error) {
+    throw new Error("Gagal memproses database pengguna: " + error.message);
+  }
+}
+
+/**
+ * Fungsi Otentikasi Pengguna untuk Login.
+ */
+function authenticateUser(username, password) {
+  try {
+    const sheet = getUsersSheet();
+    const lastRow = sheet.getLastRow();
+    
+    if (lastRow <= 1) {
+      return { success: false, error: "Database pengguna kosong." };
+    }
+    
+    const values = sheet.getRange(2, 1, lastRow - 1, USERS_HEADER_LIST.length).getValues();
+    
+    for (let i = 0; i < values.length; i++) {
+      const dbUsername = String(values[i][0]).trim().toLowerCase();
+      const dbPassword = String(values[i][1]).trim();
+      const dbFullName = String(values[i][2]);
+      const dbRole = String(values[i][3]);
+      
+      if (dbUsername === username.trim().toLowerCase() && dbPassword === password) {
+        return {
+          success: true,
+          user: {
+            username: dbUsername,
+            fullName: dbFullName,
+            role: dbRole
+          }
+        };
+      }
+    }
+    
+    return { success: false, error: "Username atau Password salah!" };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
 function seedSampleData(sheet) {
   const sampleRows = [
     [
@@ -143,15 +216,9 @@ function seedSampleData(sheet) {
       new Date()
     ]
   ];
-  
-  // Masukkan data ke sheet
   sheet.getRange(2, 1, sampleRows.length, HEADER_LIST.length).setValues(sampleRows);
 }
 
-/**
- * CREATE: Menyimpan data surat baru ke dalam sheet.
- * @param {Object} data - Objek surat dari form frontend.
- */
 function createSurat(data) {
   try {
     const sheet = getDatabaseSheet();
@@ -161,7 +228,7 @@ function createSurat(data) {
     const newRow = [
       newId,
       data.nomorSurat,
-      data.tanggalSurat, // Format string "YYYY-MM-DD"
+      data.tanggalSurat, 
       data.pengirim,
       data.penerima,
       data.perihal,
@@ -174,73 +241,37 @@ function createSurat(data) {
     ];
     
     sheet.appendRow(newRow);
-    
     return { success: true, message: "Surat berhasil disimpan dengan ID: " + newId };
   } catch (error) {
     return { success: false, error: error.message };
   }
 }
 
-/**
- * READ: Mengambil seluruh data surat dari database.
- * Dioptimalkan dengan mengubah tipe objek Tanggal menjadi String ISO primitif agar tidak merusak serialisasi GAS.
- */
 function getAllSurat() {
   try {
     const sheet = getDatabaseSheet();
     const lastRow = sheet.getLastRow();
     
     if (lastRow <= 1) {
-      return { success: true, data: [] }; // Kembalikan array kosong jika hanya ada header
+      return { success: true, data: [] }; 
     }
     
     const values = sheet.getRange(2, 1, lastRow - 1, HEADER_LIST.length).getValues();
     const listSurat = values.map(row => mapRowToObject(row));
     
-    return {
-      success: true,
-      data: listSurat
-    };
+    // Inisialisasi Users Sheet secara senyap saat meload agar tabel Users dijamin ada
+    getUsersSheet();
+
+    return { success: true, data: listSurat };
   } catch (error) {
     return { success: false, error: error.message };
   }
 }
 
-/**
- * READ SINGLE: Mengambil satu data surat berdasarkan ID.
- */
-function getSuratById(id) {
-  try {
-    const sheet = getDatabaseSheet();
-    const lastRow = sheet.getLastRow();
-    
-    if (lastRow <= 1) return { success: false, error: "Data tidak ditemukan." };
-    
-    const values = sheet.getRange(2, 1, lastRow - 1, HEADER_LIST.length).getValues();
-    
-    for (let i = 0; i < values.length; i++) {
-      if (values[i][COLUMNS.ID] === id) {
-        return {
-          success: true,
-          data: mapRowToObject(values[i])
-        };
-      }
-    }
-    
-    return { success: false, error: "Surat dengan ID tersebut tidak ditemukan." };
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
-}
-
-/**
- * UPDATE: Memperbarui data surat yang sudah ada berdasarkan ID.
- */
 function updateSurat(id, updatedData) {
   try {
     const sheet = getDatabaseSheet();
     const lastRow = sheet.getLastRow();
-    
     if (lastRow <= 1) return { success: false, error: "Database kosong." };
     
     const range = sheet.getRange(2, 1, lastRow - 1, HEADER_LIST.length);
@@ -248,10 +279,9 @@ function updateSurat(id, updatedData) {
     
     for (let i = 0; i < values.length; i++) {
       if (values[i][COLUMNS.ID] === id) {
-        const rowNum = i + 2; // Offset header dan indeks 0
+        const rowNum = i + 2; 
         const timestamp = new Date();
         
-        // Memperbarui sel secara spesifik
         if (updatedData.nomorSurat !== undefined) sheet.getRange(rowNum, COLUMNS.NOMOR_SURAT + 1).setValue(updatedData.nomorSurat);
         if (updatedData.tanggalSurat !== undefined) sheet.getRange(rowNum, COLUMNS.TANGGAL_SURAT + 1).setValue(updatedData.tanggalSurat);
         if (updatedData.pengirim !== undefined) sheet.getRange(rowNum, COLUMNS.PENGIRIM + 1).setValue(updatedData.pengirim);
@@ -262,30 +292,21 @@ function updateSurat(id, updatedData) {
         if (updatedData.lampiranUrl !== undefined) sheet.getRange(rowNum, COLUMNS.LAMPIRAN_URL + 1).setValue(updatedData.lampiranUrl);
         if (updatedData.catatan !== undefined) sheet.getRange(rowNum, COLUMNS.CATATAN + 1).setValue(updatedData.catatan);
         
-        // Selalu update waktu pembaruan terakhir
         sheet.getRange(rowNum, COLUMNS.UPDATED_AT + 1).setValue(timestamp);
         
-        return {
-          success: true,
-          message: "Data surat berhasil diperbarui."
-        };
+        return { success: true, message: "Data surat berhasil diperbarui." };
       }
     }
-    
     return { success: false, error: "Surat tidak ditemukan." };
   } catch (error) {
     return { success: false, error: error.message };
   }
 }
 
-/**
- * DELETE: Menghapus data surat berdasarkan ID.
- */
 function deleteSurat(id) {
   try {
     const sheet = getDatabaseSheet();
     const lastRow = sheet.getLastRow();
-    
     if (lastRow <= 1) return { success: false, error: "Database kosong." };
     
     const range = sheet.getRange(2, 1, lastRow - 1, HEADER_LIST.length);
@@ -293,25 +314,16 @@ function deleteSurat(id) {
     
     for (let i = 0; i < values.length; i++) {
       if (values[i][COLUMNS.ID] === id) {
-        const rowNum = i + 2; 
-        sheet.deleteRow(rowNum);
-        
-        return {
-          success: true,
-          message: "Surat berhasil dihapus dari sistem."
-        };
+        sheet.deleteRow(i + 2);
+        return { success: true, message: "Surat berhasil dihapus." };
       }
     }
-    
     return { success: false, error: "Surat tidak ditemukan." };
   } catch (error) {
     return { success: false, error: error.message };
   }
 }
 
-/**
- * Mendapatkan konfigurasi ID Spreadsheet saat ini dan status koneksinya.
- */
 function getCustomSpreadsheetConfig() {
   try {
     const properties = PropertiesService.getScriptProperties();
@@ -321,7 +333,7 @@ function getCustomSpreadsheetConfig() {
     try {
       activeId = SpreadsheetApp.getActiveSpreadsheet().getId();
     } catch(e) {
-      activeId = "Tidak dapat mengambil ID spreadsheet internal";
+      activeId = "Tidak dapat mengambil ID";
     }
     
     let currentName = "Spreadsheet Aktif (Bawaan)";
@@ -329,12 +341,8 @@ function getCustomSpreadsheetConfig() {
       try {
         currentName = SpreadsheetApp.openById(customId).getName();
       } catch (e) {
-        currentName = "Error: Tidak dapat mengakses file (Periksa hak akses Anda / ID salah)";
+        currentName = "Error: Tidak dapat mengakses file.";
       }
-    } else {
-      try {
-        currentName = SpreadsheetApp.getActiveSpreadsheet().getName();
-      } catch (e) {}
     }
 
     return {
@@ -348,37 +356,24 @@ function getCustomSpreadsheetConfig() {
   }
 }
 
-/**
- * Menyimpan ID Spreadsheet baru secara manual dan melakukan inisialisasi awal.
- * @param {string} id - ID Spreadsheet tujuan.
- */
 function setCustomSpreadsheetId(id) {
   try {
     const properties = PropertiesService.getScriptProperties();
     
-    // Skenario Reset ke Spreadsheet Bawaan
     if (!id || id.trim() === "") {
       properties.deleteProperty("CUSTOM_SPREADSHEET_ID");
-      return { 
-        success: true, 
-        message: "Berhasil dikembalikan ke Spreadsheet bawaan." 
-      };
+      return { success: true, message: "Berhasil dikembalikan ke Spreadsheet bawaan." };
     }
     
     const targetId = id.trim();
     let tempSs;
     
-    // Validasi apakah ID valid dan bisa dibuka oleh script
     try {
       tempSs = SpreadsheetApp.openById(targetId);
     } catch (e) {
-      return { 
-        success: false, 
-        error: "Spreadsheet tidak ditemukan atau Anda tidak memiliki akses edit. Pastikan ID benar dan akun Anda memiliki izin akses." 
-      };
+      return { success: false, error: "Spreadsheet tidak ditemukan atau Anda tidak memiliki akses edit." };
     }
     
-    // Pastikan sheet database otomatis terbuat di spreadsheet target baru
     let sheet = tempSs.getSheetByName(SHEET_NAME);
     if (!sheet) {
       sheet = tempSs.insertSheet(SHEET_NAME);
@@ -389,26 +384,17 @@ function setCustomSpreadsheetId(id) {
            .setFontColor("#ffffff");
     }
     
-    // Auto-seed data juga jika spreadsheet kustom yang dihubungkan ternyata kosong
     if (sheet.getLastRow() === 1) {
       seedSampleData(sheet);
     }
     
-    // Simpan ID baru di script properties
     properties.setProperty("CUSTOM_SPREADSHEET_ID", targetId);
-    
-    return { 
-      success: true, 
-      message: "Koneksi berhasil! Database terhubung ke: " + tempSs.getName() 
-    };
+    return { success: true, message: "Koneksi sukses dihubungkan ke: " + tempSs.getName() };
   } catch (error) {
     return { success: false, error: error.message };
   }
 }
 
-/**
- * Menerjemahkan satu baris data dari spreadsheet ke bentuk objek siap kirim.
- */
 function mapRowToObject(row) {
   return {
     id: row[COLUMNS.ID],
@@ -426,14 +412,9 @@ function mapRowToObject(row) {
   };
 }
 
-/**
- * Format sel tanggal aman. Mengubah Date Object menjadi format teks ISO YYYY-MM-DD
- * untuk menghindari kegagalan serialisasi data di google.script.run.
- */
 function formatCellDate(val) {
   if (!val) return "";
   if (val instanceof Date) {
-    // Format tanggal ke YYYY-MM-DD lokal
     const offset = val.getTimezoneOffset();
     const localDate = new Date(val.getTime() - (offset * 60 * 1000));
     return localDate.toISOString().split('T')[0];
@@ -441,9 +422,6 @@ function formatCellDate(val) {
   return String(val);
 }
 
-/**
- * Membuat UUID sederhana dan unik untuk ID surat.
- */
 function generateUUID() {
   const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   let result = '';
