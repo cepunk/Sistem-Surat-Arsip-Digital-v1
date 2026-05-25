@@ -59,8 +59,56 @@
 </head>
 <body class="h-full font-sans text-slate-800 antialiased overflow-hidden flex flex-col">
 
-    <!-- Container Utama -->
-    <div class="flex h-screen w-full overflow-hidden bg-slate-50">
+    <!-- ================= LAYAR 1: LOGIN SCREEN (COVER) ================= -->
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-tr from-brand-900 via-brand-700 to-slate-900 p-4 transition-all duration-300">
+        <div class="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 w-full max-w-md p-8 space-y-6 animate-in fade-in zoom-in-95 duration-300">
+            <!-- Brand Logo Login -->
+            <div class="text-center space-y-2">
+                <div class="w-16 h-16 bg-gradient-to-br from-yellow-400 to-brand-600 rounded-2xl flex items-center justify-center mx-auto shadow-md">
+                    <i class="fa-solid fa-folder-open text-3xl text-white"></i>
+                </div>
+                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">ArsipKita Portal</h2>
+                <p class="text-xs text-slate-500">Sistem Informasi Surat & Dokumen Digital Internal</p>
+            </div>
+
+            <!-- Form Login -->
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-600 block">Username</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="text" id="login-username" required placeholder="Masukkan username" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all">
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-600 block">Password</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="password" id="login-password" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all">
+                    </div>
+                </div>
+
+                <button type="submit" id="btn-login-submit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
+                    <span>Masuk ke Dashboard</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+            </form>
+
+            <!-- Petunjuk Informasi Demo Kredensial -->
+            <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-800 space-y-1">
+                <p class="font-bold"><i class="fa-solid fa-key mr-1"></i> Akun Login Uji Coba:</p>
+                <div class="grid grid-cols-2 gap-1 font-mono text-[10px] bg-white/70 p-2 rounded border border-blue-100">
+                    <div><strong>Admin (Semua Hak)</strong><br>ID: <span class="bg-yellow-100 px-0.5">admin</span><br>Pass: <span class="bg-yellow-100 px-0.5">admin123</span></div>
+                    <div><strong>User (Read-Only)</strong><br>ID: <span class="bg-yellow-100 px-0.5">user</span><br>Pass: <span class="bg-yellow-100 px-0.5">user123</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= LAYAR 2: MAIN APPLICATION SCREEN ================= -->
+    <div id="main-app-screen" class="hidden flex h-screen w-full overflow-hidden bg-slate-50">
         
         <!-- Sidebar Menu -->
         <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 transform -translate-x-full md:translate-x-0 md:relative flex flex-col bg-white border-r border-slate-200 transition-transform duration-300 ease-in-out">
@@ -115,7 +163,8 @@
                     <span id="badge-arsip-count" class="ml-auto bg-slate-100 text-slate-700 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
                 </button>
 
-                <div class="pt-4 pb-2 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                <!-- Menu Sistem (Hanya untuk Admin) -->
+                <div id="sidebar-system-group" class="pt-4 pb-2 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     Sistem
                 </div>
 
@@ -125,18 +174,22 @@
                 </button>
             </nav>
 
-            <!-- Footer Sidebar / Info Sistem -->
-            <div class="p-4 border-t border-slate-100 bg-slate-50">
+            <!-- Footer Sidebar / Info User Login -->
+            <div class="p-4 border-t border-slate-100 bg-slate-50 space-y-3">
                 <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center font-bold text-sm">
+                    <div id="avatar-circle" class="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-sm">
                         AD
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-xs font-semibold text-slate-800 truncate">Administrator</p>
-                        <p class="text-[10px] text-slate-400 truncate">admin@arsipkita.internal</p>
+                        <p id="user-display-name" class="text-xs font-bold text-slate-800 truncate">Administrator</p>
+                        <p id="user-display-role" class="text-[10px] text-slate-500 truncate">Admin</p>
                     </div>
-                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-50" title="Online"></div>
                 </div>
+                <!-- Tombol Logout -->
+                <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs text-red-600 hover:text-white bg-white hover:bg-red-600 border border-red-200 hover:border-red-600 rounded-lg font-bold transition-all shadow-sm">
+                    <i class="fa-solid fa-power-off"></i>
+                    <span>Keluar Aplikasi</span>
+                </button>
             </div>
         </aside>
 
@@ -166,7 +219,8 @@
                         <i id="refresh-icon" class="fa-solid fa-arrows-rotate"></i>
                     </button>
 
-                    <button onclick="openFormModal()" class="flex items-center px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 shadow-sm hover:shadow transition-all space-x-1.5">
+                    <!-- Tombol buat surat (Hanya untuk Admin) -->
+                    <button id="btn-navbar-create" onclick="openFormModal()" class="flex items-center px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 shadow-sm hover:shadow transition-all space-x-1.5">
                         <i class="fa-solid fa-plus text-xs"></i>
                         <span>Buat Surat</span>
                     </button>
@@ -279,7 +333,6 @@
                             </div>
                             
                             <div class="flex-1 overflow-y-auto max-h-[220px] divide-y divide-slate-100" id="recent-letters-list">
-                                <!-- Dynamic dynamic loading state -->
                                 <div class="text-center py-8 text-slate-400 text-sm">
                                     <i class="fa-solid fa-spinner animate-spin mr-2"></i> Memuat data...
                                 </div>
@@ -341,7 +394,7 @@
                             </table>
                         </div>
                         
-                        <!-- Footer Table / Info Jumlah Data -->
+                        <!-- Footer Table -->
                         <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-2">
                             <div class="text-[11px] text-slate-400 font-medium">
                                 Menampilkan <span id="info-filtered-count" class="font-bold text-slate-700">0</span> dari <span id="info-total-count" class="font-bold text-slate-700">0</span> total dokumen surat.
@@ -445,7 +498,6 @@
 
             <!-- Modal Form Body -->
             <form id="surat-form" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-                <!-- ID Hidden input -->
                 <input type="hidden" id="form-id">
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -618,16 +670,24 @@
 
     <!-- Floating Notification System -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none">
-        <!-- Toast elements loaded dynamically -->
     </div>
 
-    <!-- APP ENGINE SCRIPTS (Dual Mode GAS & Mock) -->
+    <!-- APP ENGINE SCRIPTS (Dual Mode GAS & Mock with Role Based Authentication) -->
     <script>
         // State Management
         let databaseLetters = [];
         let filteredLetters = [];
         let activeTabName = 'dashboard';
         let isGASMode = false;
+        
+        // Autentikasi Pengguna Aktif
+        let currentUser = null;
+
+        // Kredensial Pengguna Demo (Untuk Offline Preview)
+        const DEMO_USERS = [
+            { username: "admin", password: "admin123", fullName: "Administrator Utama", role: "Admin" },
+            { username: "user", password: "user123", fullName: "Staff Pengarsipan", role: "User" }
+        ];
         
         // Konfigurasi Database State
         let dbConfig = {
@@ -682,15 +742,15 @@
             }
         ];
 
-        // Inisialisasi awal aplikasi dengan sedikit penundaan demi kestabilan Iframe GAS
+        // Inisialisasi awal aplikasi
         window.addEventListener('load', () => {
             setTimeout(() => {
                 detectEnvironment();
-                loadAllData();
+                checkSession();
             }, 150);
         });
 
-        // Deteksi apakah sedang berjalan di dalam Web App Google Apps Script
+        // Deteksi lingkungan Google Apps Script
         function detectEnvironment() {
             const badge = document.getElementById('env-badge');
             if (typeof google !== 'undefined' && google.script && google.script.run) {
@@ -701,11 +761,136 @@
                 isGASMode = false;
                 badge.className = "px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 flex items-center gap-1.5";
                 badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-600 animate-pulse"></span> Mode Demo (Offline)`;
-                // Pre-fill localstorage jika kosong agar langsung tampil menarik
                 if (!localStorage.getItem('arsip_kita_db')) {
                     localStorage.setItem('arsip_kita_db', JSON.stringify(MOCK_DATA));
                 }
             }
+        }
+
+        // Memeriksa apakah session login pengguna masih aktif di browser
+        function checkSession() {
+            const savedUser = sessionStorage.getItem('arsip_kita_session');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                enterApplication();
+            } else {
+                showLoginScreen();
+            }
+        }
+
+        // Penanganan Proses Submit Login
+        function handleLogin(event) {
+            event.preventDefault();
+            const usernameInput = document.getElementById('login-username').value;
+            const passwordInput = document.getElementById('login-password').value;
+            const loginBtn = document.getElementById('btn-login-submit');
+
+            loginBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1"></i> Memvalidasi...`;
+            loginBtn.disabled = true;
+
+            if (isGASMode) {
+                google.script.run
+                    .withSuccessHandler(response => {
+                        loginBtn.innerHTML = `Masuk ke Dashboard <i class="fa-solid fa-arrow-right text-xs"></i>`;
+                        loginBtn.disabled = false;
+
+                        if (response.success) {
+                            currentUser = response.user;
+                            sessionStorage.setItem('arsip_kita_session', JSON.stringify(currentUser));
+                            showToast(`Selamat datang kembali, ${currentUser.fullName}!`, "success");
+                            enterApplication();
+                        } else {
+                            showToast(response.error, "danger");
+                        }
+                    })
+                    .withFailureHandler(err => {
+                        loginBtn.innerHTML = `Masuk ke Dashboard <i class="fa-solid fa-arrow-right text-xs"></i>`;
+                        loginBtn.disabled = false;
+                        showToast("Kesalahan login server: " + err.message, "danger");
+                    })
+                    .authenticateUser(usernameInput, passwordInput);
+            } else {
+                // Autentikasi Mode Demo Offline
+                setTimeout(() => {
+                    loginBtn.innerHTML = `Masuk ke Dashboard <i class="fa-solid fa-arrow-right text-xs"></i>`;
+                    loginBtn.disabled = false;
+
+                    const userMatch = DEMO_USERS.find(
+                        u => u.username.toLowerCase() === usernameInput.trim().toLowerCase() && u.password === passwordInput
+                    );
+
+                    if (userMatch) {
+                        currentUser = {
+                            username: userMatch.username,
+                            fullName: userMatch.fullName,
+                            role: userMatch.role
+                        };
+                        sessionStorage.setItem('arsip_kita_session', JSON.stringify(currentUser));
+                        showToast(`Demo Login Berhasil! Peran Anda: ${currentUser.role}`, "success");
+                        enterApplication();
+                    } else {
+                        showToast("Kredensial Demo Salah! Periksa info kotak biru di bawah.", "danger");
+                    }
+                }, 500);
+            }
+        }
+
+        // Tampilkan Layar Login
+        function showLoginScreen() {
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('main-app-screen').classList.add('hidden');
+        }
+
+        // Memasuki Aplikasi Utama & Menyesuaikan Hak Akses Role (RBAC)
+        function enterApplication() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app-screen').classList.remove('hidden');
+
+            // Set Avatar dan Nama di sidebar
+            document.getElementById('user-display-name').innerText = currentUser.fullName;
+            document.getElementById('user-display-role').innerText = currentUser.role;
+            
+            // Inisial untuk Avatar Bulat
+            const initials = currentUser.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            document.getElementById('avatar-circle').innerText = initials;
+
+            // Logika Pembatasan Hak Akses Berdasarkan Role
+            const isUserAdmin = currentUser.role === "Admin";
+            
+            // 1. Visibilitas Menu Settings Database (Hanya Admin)
+            const settingsBtn = document.getElementById('btn-tab-settings');
+            const systemLabel = document.getElementById('sidebar-system-group');
+            if (!isUserAdmin) {
+                if (settingsBtn) settingsBtn.classList.add('hidden');
+                if (systemLabel) systemLabel.classList.add('hidden');
+            } else {
+                if (settingsBtn) settingsBtn.classList.remove('hidden');
+                if (systemLabel) systemLabel.classList.remove('hidden');
+            }
+
+            // 2. Visibilitas Tombol Buat Surat di Top Navbar (Hanya Admin)
+            const createBtn = document.getElementById('btn-navbar-create');
+            if (!isUserAdmin) {
+                if (createBtn) createBtn.classList.add('hidden');
+            } else {
+                if (createBtn) createBtn.classList.remove('hidden');
+            }
+
+            // Load data utama aplikasi
+            loadAllData();
+        }
+
+        // Logout Sesi Pengguna
+        function handleLogout() {
+            sessionStorage.removeItem('arsip_kita_session');
+            currentUser = null;
+            
+            // Reset state input form login
+            document.getElementById('login-username').value = "";
+            document.getElementById('login-password').value = "";
+            
+            showLoginScreen();
+            showToast("Anda telah berhasil keluar dari sistem.", "success");
         }
 
         // Ambil Data Utama
@@ -726,11 +911,10 @@
                     .withFailureHandler(err => {
                         setLoadingState(false);
                         showToast("Koneksi gagal: " + err.message, "danger");
-                        console.error("GAS Execution Error: ", err);
                     })
                     .getAllSurat();
             } else {
-                // Simulasi Local Storage Offline
+                // Mode Demo Offline
                 setTimeout(() => {
                     setLoadingState(false);
                     const localData = localStorage.getItem('arsip_kita_db');
@@ -763,6 +947,12 @@
 
         // Menangani perpindahan tab sidebar
         function switchTab(tabName) {
+            // Proteksi Tambahan: Cegah Non-Admin mengakses tab Settings
+            if (tabName === 'settings' && currentUser.role !== 'Admin') {
+                showToast("Akses Ditolak: Menu ini memerlukan hak akses Administrator.", "danger");
+                return;
+            }
+
             activeTabName = tabName;
             
             // Atur tombol aktif di sidebar
@@ -797,7 +987,6 @@
                 lettersSection.classList.remove('hidden');
                 settingsSection.classList.add('hidden');
                 
-                // Judul Spesifik per Kategori Tab
                 if (tabName === 'all-surat') headerTitle.innerText = "Daftar Semua Arsip Surat";
                 if (tabName === 'surat-masuk') headerTitle.innerText = "Arsip Surat Masuk";
                 if (tabName === 'surat-keluar') headerTitle.innerText = "Arsip Surat Keluar";
@@ -826,20 +1015,15 @@
             }
         }
 
-        // Terapkan Logika Penyaringan / Pencarian
         function applyFilters() {
             const searchQuery = document.getElementById('search-input').value.toLowerCase();
             const filterKategori = document.getElementById('filter-kategori').value;
             const filterStatus = document.getElementById('filter-status').value;
 
             filteredLetters = databaseLetters.filter(letter => {
-                // Filter Kategori (Masuk/Keluar)
                 const matchKategori = (filterKategori === 'Semua') || (letter.kategori === filterKategori);
-                
-                // Filter Status
                 const matchStatus = (filterStatus === 'Semua') || (letter.status === filterStatus);
                 
-                // Search query matching
                 const rawTanggal = letter.tanggalSurat ? formatDate(letter.tanggalSurat) : '';
                 const matchSearch = !searchQuery || 
                     letter.nomorSurat.toLowerCase().includes(searchQuery) ||
@@ -852,15 +1036,11 @@
                 return matchKategori && matchStatus && matchSearch;
             });
 
-            // Urutkan default: Terbaru di atas (berdasarkan tanggalSurat)
             filteredLetters.sort((a, b) => new Date(b.tanggalSurat) - new Date(a.tanggalSurat));
-
             renderLettersTable();
         }
 
-        // Menghitung & Mengisi Metrik Dashboard
         function renderDashboard() {
-            // Count Aggregations
             const total = databaseLetters.length;
             const masuk = databaseLetters.filter(l => l.kategori === "Surat Masuk").length;
             const keluar = databaseLetters.filter(l => l.kategori === "Surat Keluar").length;
@@ -869,7 +1049,6 @@
             const draft = databaseLetters.filter(l => l.status === "Draft").length;
             const proses = databaseLetters.filter(l => l.status === "Proses").length;
 
-            // Element Injector
             document.getElementById('stat-total').innerText = total;
             document.getElementById('stat-masuk').innerText = masuk;
             document.getElementById('stat-keluar').innerText = keluar;
@@ -883,7 +1062,6 @@
             if (badgeKeluar) badgeKeluar.innerText = keluar;
             if (badgeArsip) badgeArsip.innerText = statusArsipCount;
 
-            // Status bar percents
             const draftPct = total > 0 ? (draft / total) * 100 : 0;
             const prosesPct = total > 0 ? (proses / total) * 100 : 0;
             const arsipPct = total > 0 ? (statusArsipCount / total) * 100 : 0;
@@ -897,7 +1075,6 @@
             document.getElementById('dist-arsip-num').innerText = `${statusArsipCount} Surat`;
             document.getElementById('dist-arsip-bar').style.width = `${arsipPct}%`;
 
-            // Render Recent List (Maksimal 5 item terbaru)
             const sortedRecent = [...databaseLetters].sort((a, b) => new Date(b.createdAt || b.tanggalSurat) - new Date(a.createdAt || a.tanggalSurat)).slice(0, 5);
             const recentContainer = document.getElementById('recent-letters-list');
 
@@ -911,9 +1088,7 @@
                     ? "bg-blue-50 text-blue-700" 
                     : "bg-emerald-50 text-emerald-700";
                 
-                const iconClass = letter.kategori === "Surat Masuk"
-                    ? "fa-file-import"
-                    : "fa-file-export";
+                const iconClass = letter.kategori === "Surat Masuk" ? "fa-file-import" : "fa-file-export";
 
                 return `
                 <div class="py-3 flex items-center justify-between hover:bg-slate-50 px-2 rounded-lg transition-colors cursor-pointer" onclick="openDetailModal('${letter.id}')">
@@ -933,7 +1108,6 @@
             }).join('');
         }
 
-        // Menampilkan Item Surat di Tabel Utama
         function renderLettersTable() {
             const tableBody = document.getElementById('table-letters-body');
             document.getElementById('info-total-count').innerText = databaseLetters.length;
@@ -953,14 +1127,28 @@
                 return;
             }
 
+            const isUserAdmin = currentUser && currentUser.role === "Admin";
+
             tableBody.innerHTML = filteredLetters.map(letter => {
-                // Tautan Link Digital
                 const isHaveAttachment = letter.lampiranUrl && letter.lampiranUrl.trim() !== "";
                 const attachmentButton = isHaveAttachment 
-                    ? `<a href="${letter.lampiranUrl}" target="_blank" class="inline-flex p-1.5 bg-blue-50 text-brand-600 hover:bg-blue-100 rounded-md transition-all text-xs border border-blue-200" title="Buka Dokumen PDF/Lampiran">
+                    ? `<a href="${letter.lampiranUrl}" target="_blank" class="inline-flex p-1.5 bg-blue-50 text-brand-600 hover:bg-blue-100 rounded-md transition-all text-xs border border-blue-200" title="Buka Dokumen">
                          <i class="fa-solid fa-file-pdf"></i>
                        </a>`
                     : `<span class="text-xs text-slate-300">-</span>`;
+
+                // Logika Aksi Edit & Hapus (Hanya Admin)
+                let actionButtons = "";
+                if (isUserAdmin) {
+                    actionButtons = `
+                        <button onclick="editSurat('${letter.id}')" class="p-1.5 text-slate-500 hover:text-yellow-600 hover:bg-slate-100 rounded-lg transition-colors" title="Ubah Data">
+                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                        </button>
+                        <button onclick="confirmDelete('${letter.id}', '${letter.nomorSurat}')" class="p-1.5 text-slate-500 hover:text-red-600 hover:bg-slate-100 rounded-lg transition-colors" title="Hapus">
+                            <i class="fa-solid fa-trash text-sm"></i>
+                        </button>
+                    `;
+                }
 
                 return `
                 <tr class="hover:bg-slate-50/75 transition-colors group">
@@ -997,20 +1185,20 @@
                             <button onclick="openDetailModal('${letter.id}')" class="p-1.5 text-slate-500 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition-colors" title="Buka Detail">
                                 <i class="fa-solid fa-eye text-sm"></i>
                             </button>
-                            <button onclick="editSurat('${letter.id}')" class="p-1.5 text-slate-500 hover:text-yellow-600 hover:bg-slate-100 rounded-lg transition-colors" title="Ubah Data">
-                                <i class="fa-solid fa-pen-to-square text-sm"></i>
-                            </button>
-                            <button onclick="confirmDelete('${letter.id}', '${letter.nomorSurat}')" class="p-1.5 text-slate-500 hover:text-red-600 hover:bg-slate-100 rounded-lg transition-colors" title="Hapus Permanen">
-                                <i class="fa-solid fa-trash text-sm"></i>
-                            </button>
+                            ${actionButtons}
                         </div>
                     </td>
                 </tr>`;
             }).join('');
         }
 
-        // Form & Modals Operations
         function openFormModal(isEdit = false) {
+            // Proteksi Sisi Klien Tambahan
+            if (currentUser.role !== "Admin") {
+                showToast("Akses Ditolak: Anda tidak memiliki izin untuk membuat/mengedit dokumen.", "danger");
+                return;
+            }
+
             const formModal = document.getElementById('form-modal');
             const formTitle = document.getElementById('form-modal-title');
             
@@ -1020,7 +1208,6 @@
                 formTitle.innerText = "Buat Dokumen Surat Baru";
                 document.getElementById('surat-form').reset();
                 document.getElementById('form-id').value = "";
-                // Pre-fill default tanggal hari ini
                 document.getElementById('form-tanggal').value = new Date().toISOString().split('T')[0];
             } else {
                 formTitle.innerText = "Ubah Informasi Surat";
@@ -1031,10 +1218,14 @@
             document.getElementById('form-modal').classList.add('hidden');
         }
 
-        // Simpan Surat Baru / Ubah Surat
         function handleFormSubmit(event) {
             event.preventDefault();
             
+            if (currentUser.role !== "Admin") {
+                showToast("Kesalahan Hak Akses: Sesi Anda tidak berhak memodifikasi database.", "danger");
+                return;
+            }
+
             const submitBtn = document.getElementById('btn-submit-form');
             const originalText = submitBtn.innerHTML;
             
@@ -1058,7 +1249,6 @@
 
             if (isGASMode) {
                 if (isEdit) {
-                    // Skenario Update di GAS
                     google.script.run
                         .withSuccessHandler(response => {
                             resetSubmitButton(submitBtn, originalText);
@@ -1076,7 +1266,6 @@
                         })
                         .updateSurat(letterId, payload);
                 } else {
-                    // Skenario Create Baru di GAS
                     google.script.run
                         .withSuccessHandler(response => {
                             resetSubmitButton(submitBtn, originalText);
@@ -1095,7 +1284,7 @@
                         .createSurat(payload);
                 }
             } else {
-                // Penanganan Demo Offline / LocalStorage
+                // Skenario Demo Offline
                 setTimeout(() => {
                     resetSubmitButton(submitBtn, originalText);
                     const localData = JSON.parse(localStorage.getItem('arsip_kita_db') || "[]");
@@ -1134,8 +1323,12 @@
             btn.disabled = false;
         }
 
-        // Ambil Data ke Form untuk diedit
         function editSurat(id) {
+            if (currentUser.role !== "Admin") {
+                showToast("Akses Ditolak: Fitur ini khusus Admin.", "danger");
+                return;
+            }
+
             const letter = databaseLetters.find(l => l.id === id);
             if (!letter) {
                 showToast("Data tidak ditemukan.", "danger");
@@ -1145,7 +1338,6 @@
             document.getElementById('form-id').value = letter.id;
             document.getElementById('form-nomor').value = letter.nomorSurat;
             
-            // Format tanggal surat (YYYY-MM-DD)
             let formattedDate = "";
             if (letter.tanggalSurat) {
                 const dateObj = new Date(letter.tanggalSurat);
@@ -1166,7 +1358,6 @@
             openFormModal(true);
         }
 
-        // Buka Modal Detail Surat
         function openDetailModal(id) {
             const letter = databaseLetters.find(l => l.id === id);
             if (!letter) {
@@ -1174,7 +1365,6 @@
                 return;
             }
 
-            // Kategori Badge render
             const catBadge = document.getElementById('detail-badge-kategori');
             catBadge.innerText = letter.kategori;
             if (letter.kategori === 'Surat Masuk') {
@@ -1183,7 +1373,6 @@
                 catBadge.className = "px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800";
             }
 
-            // Status Badge render
             const statBadge = document.getElementById('detail-badge-status');
             statBadge.innerText = letter.status;
             if (letter.status === 'Draft') {
@@ -1203,7 +1392,6 @@
             const catatanBox = document.getElementById('detail-catatan');
             catatanBox.innerText = (letter.catatan && letter.catatan.trim() !== "") ? letter.catatan : "Tidak ada catatan disposisi / deskripsi tambahan.";
             
-            // Buat lampiran terlihat
             const wrapper = document.getElementById('detail-lampiran-wrapper');
             const link = document.getElementById('detail-lampiran-link');
             if (letter.lampiranUrl && letter.lampiranUrl.trim() !== "") {
@@ -1214,7 +1402,6 @@
             }
 
             document.getElementById('detail-created').innerText = letter.createdAt ? formatDate(letter.createdAt) : '-';
-
             document.getElementById('detail-modal').classList.remove('hidden');
         }
 
@@ -1222,8 +1409,11 @@
             document.getElementById('detail-modal').classList.add('hidden');
         }
 
-        // Buka Dialog Konfirmasi Hapus
         function confirmDelete(id, nomorSurat) {
+            if (currentUser.role !== "Admin") {
+                showToast("Akses Ditolak: Anda tidak memiliki wewenang untuk menghapus.", "danger");
+                return;
+            }
             document.getElementById('delete-target-id').value = id;
             document.getElementById('confirm-surat-detail').innerText = nomorSurat;
             document.getElementById('confirm-modal').classList.remove('hidden');
@@ -1233,8 +1423,12 @@
             document.getElementById('confirm-modal').classList.add('hidden');
         }
 
-        // Eksekusi Penghapusan Real
         function executeDelete() {
+            if (currentUser.role !== "Admin") {
+                showToast("Akses Ditolak: Sesi Anda tidak valid untuk menghapus.", "danger");
+                return;
+            }
+
             const id = document.getElementById('delete-target-id').value;
             if (!id) return;
             
@@ -1255,7 +1449,7 @@
                     })
                     .deleteSurat(id);
             } else {
-                // Skenario Demo Offline / LocalStorage
+                // Skenario Demo Offline
                 setTimeout(() => {
                     closeConfirmModal();
                     const localData = JSON.parse(localStorage.getItem('arsip_kita_db') || "[]");
@@ -1267,8 +1461,9 @@
             }
         }
 
-        // SINKRONISASI KONEKSI DATABASE MANUAl (SETTINGS TAB)
         function loadDatabaseConfig() {
+            if (currentUser.role !== "Admin") return;
+
             if (isGASMode) {
                 google.script.run
                     .withSuccessHandler(response => {
@@ -1278,7 +1473,7 @@
                             dbConfig.currentName = response.currentName;
                             renderDatabaseConfigUI();
                         } else {
-                            showToast("Gagal mengambil data konfigurasi: " + response.error, "danger");
+                            showToast("Gagal mengambil konfigurasi: " + response.error, "danger");
                         }
                     })
                     .withFailureHandler(err => {
@@ -1286,12 +1481,9 @@
                     })
                     .getCustomSpreadsheetConfig();
             } else {
-                // Skenario Demo Offline
                 const localCustomId = localStorage.getItem('arsip_kita_custom_db_id') || "";
                 dbConfig.customId = localCustomId;
-                dbConfig.currentName = localCustomId !== "" 
-                    ? "Spreadsheet Kustom Demo" 
-                    : "Spreadsheet Aktif (Bawaan)";
+                dbConfig.currentName = localCustomId !== "" ? "Spreadsheet Kustom Demo" : "Spreadsheet Aktif (Bawaan)";
                 renderDatabaseConfigUI();
             }
         }
@@ -1311,11 +1503,12 @@
                 document.getElementById('db-display-id').innerText = dbConfig.activeId;
                 document.getElementById('db-input-custom-id').value = "";
             }
-
             document.getElementById('db-display-name').innerText = dbConfig.currentName;
         }
 
         function saveCustomDbConnection() {
+            if (currentUser.role !== "Admin") return;
+
             const inputId = document.getElementById('db-input-custom-id').value.trim();
             const btn = document.getElementById('btn-save-db-connection');
             const originalText = btn.innerHTML;
@@ -1336,7 +1529,7 @@
                         if (response.success) {
                             showToast(response.message, "success");
                             loadDatabaseConfig();
-                            loadAllData(); // Memuat ulang data dari spreadsheet baru
+                            loadAllData();
                         } else {
                             showToast(response.error, "danger");
                         }
@@ -1348,18 +1541,19 @@
                     })
                     .setCustomSpreadsheetId(inputId);
             } else {
-                // Penanganan Demo Offline
                 setTimeout(() => {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                     localStorage.setItem('arsip_kita_custom_db_id', inputId);
-                    showToast("Demo: ID Spreadsheet kustom berhasil disimpan secara lokal!", "success");
+                    showToast("Demo: ID Spreadsheet kustom disimpan secara lokal!", "success");
                     loadDatabaseConfig();
                 }, 800);
             }
         }
 
         function resetDbConnectionToDefault() {
+            if (currentUser.role !== "Admin") return;
+
             const btn = document.getElementById('btn-reset-db-connection');
             const originalText = btn.innerHTML;
 
@@ -1374,7 +1568,7 @@
                         if (response.success) {
                             showToast(response.message, "success");
                             loadDatabaseConfig();
-                            loadAllData(); // Memuat ulang dari spreadsheet bawaan internal
+                            loadAllData();
                         } else {
                             showToast("Gagal mereset: " + response.error, "danger");
                         }
@@ -1386,23 +1580,18 @@
                     })
                     .setCustomSpreadsheetId("");
             } else {
-                // Penanganan Demo Offline
                 setTimeout(() => {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                     localStorage.removeItem('arsip_kita_custom_db_id');
-                    showToast("Demo: Koneksi telah dikembalikan ke data default bawaan!", "success");
+                    showToast("Demo: Koneksi telah dikembalikan ke data default!", "success");
                     loadDatabaseConfig();
                 }, 400);
             }
         }
 
         function copyActiveDbId() {
-            const idToCopy = dbConfig.customId && dbConfig.customId.trim() !== "" 
-                ? dbConfig.customId 
-                : dbConfig.activeId;
-            
-            // Bypass iFrame sandboxing restrictions dengan fallback input element
+            const idToCopy = dbConfig.customId && dbConfig.customId.trim() !== "" ? dbConfig.customId : dbConfig.activeId;
             const tempInput = document.createElement("input");
             tempInput.value = idToCopy;
             document.body.appendChild(tempInput);
@@ -1411,30 +1600,25 @@
             try {
                 const successful = document.execCommand('copy');
                 if (successful) {
-                    showToast("ID Spreadsheet berhasil disalin ke clipboard!", "success");
+                    showToast("ID Spreadsheet berhasil disalin!", "success");
                 } else {
                     showToast("Gagal menyalin.", "danger");
                 }
             } catch (err) {
                 showToast("Metode salin tidak didukung oleh browser Anda.", "danger");
             }
-            
             document.body.removeChild(tempInput);
         }
 
-        // UTILITY FUNCTIONS
-        // Custom Toast Notification System
         function showToast(message, type = "success") {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             
             const bgClass = type === "success" 
                 ? "bg-slate-900 text-white border-l-4 border-emerald-500" 
-                : "bg-red-900 text-white border-l-4 border-red-500";
+                : "bg-red-950 text-white border-l-4 border-red-500";
             
-            const icon = type === "success" 
-                ? "fa-circle-check text-emerald-400" 
-                : "fa-triangle-exclamation text-red-400";
+            const icon = type === "success" ? "fa-circle-check text-emerald-400" : "fa-triangle-exclamation text-red-400";
 
             toast.className = `${bgClass} flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl text-xs font-semibold max-w-sm pointer-events-auto transition-all transform translate-y-2 opacity-0 duration-300`;
             toast.innerHTML = `
@@ -1446,23 +1630,19 @@
 
             container.appendChild(toast);
             
-            // Animasi masuk
             setTimeout(() => {
                 toast.classList.remove('translate-y-2', 'opacity-0');
             }, 10);
 
-            // Hilang otomatis dalam 4 detik
             setTimeout(() => {
                 toast.classList.add('translate-y-2', 'opacity-0');
                 setTimeout(() => toast.remove(), 300);
             }, 4000);
         }
 
-        // Memformat Tanggal ke Format Indonesia yang Indah
         function formatDate(dateString) {
             if (!dateString) return "-";
             
-            // Cegah off-by-one akibat parsing otomatis timezone UTC pada string YYYY-MM-DD murni
             if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateString.trim())) {
                 const parts = dateString.trim().split('-');
                 const day = parts[2];
@@ -1490,7 +1670,6 @@
             return `${day} ${month} ${year}`;
         }
 
-        // Helper Rendering Status Badge Style
         function getStatusBadge(status) {
             if (status === 'Draft') {
                 return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">Draft</span>`;
@@ -1502,7 +1681,6 @@
             return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800">${status}</span>`;
         }
 
-        // Sidebar responsive toggle
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             if (sidebar.classList.contains('-translate-x-full')) {
